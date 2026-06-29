@@ -231,4 +231,16 @@ class GameState:
         else:
             return self.squareUnderAttack(self.black_king_location[0], self.black_king_location[1])
 
+    def squareUnderAttack(self, row, col):
+        """
+        Determine if enemy can attack the square row col
+        """
+        self.white_to_move = not self.white_to_move  # switch to opponent's point of view
+        opponents_moves = self.getAllPossibleMoves()
+        self.white_to_move = not self.white_to_move
+        for move in opponents_moves:
+            if move.end_row == row and move.end_col == col:  # square is under attack
+                return True
+        return False
+
     
