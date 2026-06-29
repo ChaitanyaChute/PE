@@ -222,4 +222,13 @@ class GameState:
         self.current_castling_rights = temp_castle_rights
         return moves
 
+    def inCheck(self):
+        """
+        Determine if a current player is in check
+        """
+        if self.white_to_move:
+            return self.squareUnderAttack(self.white_king_location[0], self.white_king_location[1])
+        else:
+            return self.squareUnderAttack(self.black_king_location[0], self.black_king_location[1])
+
     
