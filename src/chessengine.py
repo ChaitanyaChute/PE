@@ -124,4 +124,38 @@ class GameState:
             self.checkmate = False
             self.stalemate = False
 
+    def updateCastleRights(self, move):
+        """
+        Update the castle rights given the move
+        """
+        if move.piece_captured == "wR":
+            if move.end_col == 0:  # left rook
+                self.current_castling_rights.wqs = False
+            elif move.end_col == 7:  # right rook
+                self.current_castling_rights.wks = False
+        elif move.piece_captured == "bR":
+            if move.end_col == 0:  # left rook
+                self.current_castling_rights.bqs = False
+            elif move.end_col == 7:  # right rook
+                self.current_castling_rights.bks = False
+
+        if move.piece_moved == 'wK':
+            self.current_castling_rights.wqs = False
+            self.current_castling_rights.wks = False
+        elif move.piece_moved == 'bK':
+            self.current_castling_rights.bqs = False
+            self.current_castling_rights.bks = False
+        elif move.piece_moved == 'wR':
+            if move.start_row == 7:
+                if move.start_col == 0:  # left rook
+                    self.current_castling_rights.wqs = False
+                elif move.start_col == 7:  # right rook
+                    self.current_castling_rights.wks = False
+        elif move.piece_moved == 'bR':
+            if move.start_row == 0:
+                if move.start_col == 0:  # left rook
+                    self.current_castling_rights.bqs = False
+                elif move.start_col == 7:  # right rook
+                    self.current_castling_rights.bks = False
+
     
