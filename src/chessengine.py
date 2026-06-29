@@ -467,4 +467,37 @@ class GameState:
                     if end_piece[0] != ally_color:  # not an ally piece - empty or enemy
                         moves.append(Move((row, col), (end_row, end_col), self.board))
 
+    def getBishopMoves(self, row, col, moves):
+        """
+        Get all the bishop moves for the bishop located at row col and add the moves to the list.
+        """
+        piece_pinned = False
+        pin_direction = ()
+        for i in range(len(self.pins) - 1, -1, -1):
+            if self.pins[i][0] == row and self.pins[i][1] == col:
+                piece_pinned = True
+                pin_direction = (self.pins[i][2], self.pins[i][3])
+                self.pins.remove(self.pins[i])
+                break
+
+        directions = ((-1, -1), (-1, 1), (1, 1), (1, -1))  # diagonals: up/left up/right down/right down/left
+        enemy_color = "b" if self.white_to_move else "w"
+        for direction in directions:
+            for i in range(1, 8):
+                end_row = row + direction[0] * i
+                end_col = col + direction[1] * i
+                if 0 <= end_row <= 7 and 0 <= end_col <= 7:  # check if the move is on board
+                    if not piece_pinned or pin_direction == direction or pin_direction == (
+                            -direction[0], -direction[1]):
+                        end_piece = self.board[end_row][end_col]
+                        if end_piece == "--":  # empty space is valid
+                            moves.append(Move((row, col), (end_row, end_col), self.board))
+                        elif end_piece[0] == enemy_color:  # capture enemy piece
+                            moves.append(Move((row, col), (end_row, end_col), self.board))
+                            break
+                        else:  # friendly piece
+                            break
+                else:  # off board
+                    break
+
     
