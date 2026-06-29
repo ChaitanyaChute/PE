@@ -409,4 +409,39 @@ class GameState:
                     if not attacking_piece or blocking_piece:
                         moves.append(Move((row, col), (row + move_amount, col + 1), self.board, is_enpassant_move=True))
 
+    def getRookMoves(self, row, col, moves):
+        """
+        Get all the rook moves for the rook located at row, col and add the moves to the list.
+        """
+        piece_pinned = False
+        pin_direction = ()
+        for i in range(len(self.pins) - 1, -1, -1):
+            if self.pins[i][0] == row and self.pins[i][1] == col:
+                piece_pinned = True
+                pin_direction = (self.pins[i][2], self.pins[i][3])
+                if self.board[row][col][
+                    1] != "Q":  # can't remove queen from pin on rook moves, only remove it on bishop moves
+                    self.pins.remove(self.pins[i])
+                break
+
+        directions = ((-1, 0), (0, -1), (1, 0), (0, 1))  # up, left, down, right
+        enemy_color = "b" if self.white_to_move else "w"
+        for direction in directions:
+            for i in range(1, 8):
+                end_row = row + direction[0] * i
+                end_col = col + direction[1] * i
+                if 0 <= end_row <= 7 and 0 <= end_col <= 7:  # check for possible moves only in boundaries of the board
+                    if not piece_pinned or pin_direction == direction or pin_direction == (
+                            -direction[0], -direction[1]):
+                        end_piece = self.board[end_row][end_col]
+                        if end_piece == "--":  # empty space is valid
+                            moves.append(Move((row, col), (end_row, end_col), self.board))
+                        elif end_piece[0] == enemy_color:  # capture enemy piece
+                            moves.append(Move((row, col), (end_row, end_col), self.board))
+                            break
+                        else:  # friendly piece
+                            break
+                else:  # off board
+                    break
+
     
