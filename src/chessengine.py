@@ -500,4 +500,11 @@ class GameState:
                 else:  # off board
                     break
 
+    def getQueenMoves(self, row, col, moves):
+        """
+        Get all the queen moves for the queen located at row col and add the moves to the list.
+        """
+        self.getBishopMoves(row, col, moves)
+        self.getRookMoves(row, col, moves)
+
     
