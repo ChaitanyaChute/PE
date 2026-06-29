@@ -243,4 +243,17 @@ class GameState:
                 return True
         return False
 
+    def getAllPossibleMoves(self):
+        """
+        All moves without considering checks.
+        """
+        moves = []
+        for row in range(len(self.board)):
+            for col in range(len(self.board[row])):
+                turn = self.board[row][col][0]
+                if (turn == "w" and self.white_to_move) or (turn == "b" and not self.white_to_move):
+                    piece = self.board[row][col][1]
+                    self.moveFunctions[piece](row, col, moves)  # calls appropriate move function based on piece type
+        return moves
+
     
