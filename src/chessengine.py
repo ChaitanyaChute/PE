@@ -444,4 +444,27 @@ class GameState:
                 else:  # off board
                     break
 
+    def getKnightMoves(self, row, col, moves):
+        """
+        Get all the knight moves for the knight located at row col and add the moves to the list.
+        """
+        piece_pinned = False
+        for i in range(len(self.pins) - 1, -1, -1):
+            if self.pins[i][0] == row and self.pins[i][1] == col:
+                piece_pinned = True
+                self.pins.remove(self.pins[i])
+                break
+
+        knight_moves = ((-2, -1), (-2, 1), (-1, 2), (1, 2), (2, -1), (2, 1), (-1, -2),
+                        (1, -2))  # up/left up/right right/up right/down down/left down/right left/up left/down
+        ally_color = "w" if self.white_to_move else "b"
+        for move in knight_moves:
+            end_row = row + move[0]
+            end_col = col + move[1]
+            if 0 <= end_row <= 7 and 0 <= end_col <= 7:
+                if not piece_pinned:
+                    end_piece = self.board[end_row][end_col]
+                    if end_piece[0] != ally_color:  # not an ally piece - empty or enemy
+                        moves.append(Move((row, col), (end_row, end_col), self.board))
+
     
