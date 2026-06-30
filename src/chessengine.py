@@ -547,4 +547,14 @@ class GameState:
                 not self.white_to_move and self.current_castling_rights.bqs):
             self.getQueensideCastleMoves(row, col, moves)
 
-    
+    def getKingsideCastleMoves(self, row, col, moves):
+        if self.board[row][col + 1] == '--' and self.board[row][col + 2] == '--':
+            if not self.squareUnderAttack(row, col + 1) and not self.squareUnderAttack(row, col + 2):
+                moves.append(Move((row, col), (row, col + 2), self.board, is_castle_move=True))
+
+    def getQueensideCastleMoves(self, row, col, moves):
+        if self.board[row][col - 1] == '--' and self.board[row][col - 2] == '--' and self.board[row][col - 3] == '--':
+            if not self.squareUnderAttack(row, col - 1) and not self.squareUnderAttack(row, col - 2):
+                moves.append(Move((row, col), (row, col - 2), self.board, is_castle_move=True))
+
+
