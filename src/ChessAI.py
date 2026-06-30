@@ -70,3 +70,42 @@ STALEMATE = 0
 DEPTH = 4
 
 
+def orderMoves(moves, game_state):
+    # Order moves based on captures and high-value targets
+    capture_moves = [move for move in moves if game_state.board[move.end_row][move.end_col] != "--"]
+    quiet_moves = [move for move in moves if move not in capture_moves]
+    
+    #what will be benifit if this ? benifit is that we will capture the high value pieces first
+    capture_moves.sort(key=lambda move: piece_score[game_state.board[move.end_row][move.end_col][1]], reverse=True)
+
+    #what will be benifit if this ? benifit is that we will move the pieces to the best position
+    quiet_moves.sort(key=lambda move: piece_position_scores.get(game_state.board[move.start_row][move.start_col], [[0]*8]*8)[move.end_row][move.end_col], reverse=True)
+    
+    ordered_moves = capture_moves + quiet_moves
+
+    return ordered_moves
+
+
+def findMoveNegaMaxAlphaBeta(game_state, valid_moves, depth, alpha, beta, turn_multiplier):
+    global next_move
+    if depth == 0 or game_state.stalemate or game_state.checkmate:
+        return turn_multiplier * scoreBoard(game_state)
+
+    max_score = -CHECKMATE
+    # Move Ordering: Sorting moves based on some heuristic 
+    ordered_moves = orderMoves(valid_moves, game_state)
+    for move in ordered_moves:
+        game_state.makeMove(move)
+        next_moves = game_state.getValidMoves()
+        score = -findMoveNegaMaxAlphaBeta(game_state, next_moves, depth - 1, -beta, -alpha, -turn_multiplier)
+        game_state.undoMove()
+        if score > max_score:
+            max_score = score
+            if depth == DEPTH:
+                next_move = move
+        alpha = max(alpha, score)
+        if alpha >= beta:
+            break
+    return max_score
+
+# Transposition Table
