@@ -534,4 +534,17 @@ class GameState:
                     else:
                         self.black_king_location = (row, col)
     
+    def getCastleMoves(self, row, col, moves):
+        """
+        Generate all valid castle moves for the king at (row, col) and add them to the list of moves.
+        """
+        if self.squareUnderAttack(row, col):
+            return  # can't castle while in check
+        if (self.white_to_move and self.current_castling_rights.wks) or (
+                not self.white_to_move and self.current_castling_rights.bks):
+            self.getKingsideCastleMoves(row, col, moves)
+        if (self.white_to_move and self.current_castling_rights.wqs) or (
+                not self.white_to_move and self.current_castling_rights.bqs):
+            self.getQueensideCastleMoves(row, col, moves)
+
     
