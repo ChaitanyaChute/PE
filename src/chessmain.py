@@ -453,3 +453,124 @@ def runMenu(screen, clock):
         clock.tick(60)
         p.display.flip()
 
+def main():
+    p.init()
+    screen = p.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
+    p.display.set_caption("Chess")
+    clock = p.time.Clock()
+
+    initFonts()
+    loadImages()
+
+    while True:
+        mode_label, (player_one, player_two) = runMenu(screen, clock)
+
+        game_state    = chessengine.GameState()
+        valid_moves   = game_state.getValidMoves()
+        move_made     = False
+        animate       = False
+        running       = True
+        sq_selected   = ()
+        player_clicks = []
+        game_over     = False
+        ai_thinking   = False
+        move_undone   = False
+        move_finder   = None
+        return_queue  = None
+
+        while running:
+            human_turn = (game_state.white_to_move and player_one) or \
+                         (not game_state.white_to_move and player_two)
+
+            for e in p.event.get():
+                if e.type == p.QUIT:
+                    p.quit(); sys.exit()
+
+                elif e.type == p.KEYDOWN:
+                    if e.key == p.K_ESCAPE:
+                        if ai_thinking and move_finder:
+                            move_finder.terminate()
+                        running = False
+
+                    elif e.key == p.K_z:
+                        game_state.undoMove()
+                        move_made = animate = False
+                        game_over = False
+                        if ai_thinking and move_finder:
+                            move_finder.terminate(); ai_thinking = False
+                        move_undone = True
+
+                    elif e.key == p.K_r:
+                        game_state    = chessengine.GameState()
+                        valid_moves   = game_state.getValidMoves()
+                        sq_selected   = (); player_clicks = []
+                        move_made     = animate = game_over = False
+                        if ai_thinking and move_finder:
+                            move_finder.terminate(); ai_thinking = False
+                        move_undone   = True
+
+                elif e.type == p.MOUSEBUTTONDOWN:
+                    if not game_over:
+                        loc = p.mouse.get_pos()
+                        ox, oy = boardOrigin()
+                        col = (loc[0] - ox) // SQ
+                        row = (loc[1] - oy) // SQ
+
+                        if sq_selected == (row, col) or not (0 <= col < 8 and 0 <= row < 8):
+                            sq_selected = (); player_clicks = []
+                        else:
+                            sq_selected = (row, col)
+                            player_clicks.append(sq_selected)
+
+                        if len(player_clicks) == 2 and human_turn:
+                            move = chessengine.Move(player_clicks[0], player_clicks[1], game_state.board)
+                            for vm in valid_moves:
+                                if move == vm:
+                                    game_state.makeMove(vm)
+                                    move_made = animate = True
+                                    sq_selected = (); player_clicks = []
+                                    break
+                            if not move_made:
+                                player_clicks = [sq_selected]
+
+            # AI move
+            if not game_over and not human_turn and not move_undone:
+                if not ai_thinking:
+                    ai_thinking  = True
+                    return_queue = Queue()
+                    move_finder  = Process(
+                        target=ChessAI.findBestMove,
+                        args=(game_state, valid_moves, return_queue))
+                    move_finder.start()
+
+                if not move_finder.is_alive():
+                    ai_move = return_queue.get()
+                    if ai_move is None:
+                        ai_move = ChessAI.findRandomMove(valid_moves)
+                    game_state.makeMove(ai_move)
+                    move_made = animate = True
+                    ai_thinking = False
+
+            if move_made:
+                if animate:
+                    animateMove(game_state.move_log[-1], screen, game_state.board, clock, mode_label)
+                valid_moves = game_state.getValidMoves()
+                move_made = animate = False
+                move_undone = False
+
+            # Draw
+            drawBG(screen)
+            drawBoard(screen)
+            drawHighlights(screen, game_state, valid_moves, sq_selected)
+            drawPieces(screen, game_state.board)
+            drawSidePanel(screen, game_state, mode_label)
+
+            if game_state.checkmate or game_state.stalemate:
+                game_over = True
+
+            clock.tick(MAX_FPS)
+            p.display.flip()
+
+
+if __name__ == "__main__":
+    main()
