@@ -365,3 +365,91 @@ def animateMove(move, screen, board, clock, mode_label):
         clock.tick(60)
 
 
+def runMenu(screen, clock):
+    MODES = [
+        ("Human  vs  AI",    (True,  False), "Play against the computer"),
+        ("Human  vs  Human", (True,  True),  "Local two-player game"),
+    ]
+    BTN_W, BTN_H = 300, 62
+    GAP          = 18
+    total_h      = len(MODES) * (BTN_H + GAP) - GAP
+    start_y      = WINDOW_HEIGHT // 2 - total_h // 2 + 50
+
+    btn_rects = []
+    for i in range(len(MODES)):
+        rx = WINDOW_WIDTH // 2 - BTN_W // 2
+        ry = start_y + i * (BTN_H + GAP)
+        btn_rects.append(p.Rect(rx, ry, BTN_W, BTN_H))
+
+
+    TILE_N = 6
+    tile_s = WINDOW_WIDTH // TILE_N
+
+    tick = 0
+    while True:
+        tick += 1
+        mx, my = p.mouse.get_pos()
+
+        for e in p.event.get():
+            if e.type == p.QUIT:
+                p.quit(); sys.exit()
+            if e.type == p.MOUSEBUTTONDOWN:
+                for i, rect in enumerate(btn_rects):
+                    if rect.collidepoint(mx, my):
+                        return MODES[i][0], MODES[i][1]
+
+        drawBG(screen)
+
+        for r in range(TILE_N + 1):
+            for c in range(TILE_N + 1):
+                if (r + c) % 2 == 0:
+                    alpha_surf = p.Surface((tile_s, tile_s), p.SRCALPHA)
+                    alpha_surf.fill((255, 255, 255, 8))
+                    screen.blit(alpha_surf, (c * tile_s, r * tile_s))
+
+        title_y = WINDOW_HEIGHT // 2 - total_h // 2 - 115
+
+        crown = FONTS['title'].render("♔", True, C_GOLD)
+        screen.blit(crown, (WINDOW_WIDTH // 2 - crown.get_width() // 2, title_y))
+
+        title = FONTS['title'].render("CHESS", True, C_TEXT_PRIMARY)
+        screen.blit(title, (WINDOW_WIDTH // 2 - title.get_width() // 2, title_y + 58))
+
+        rule_y = title_y + 58 + title.get_height() + 10
+        rule_w = 180
+        p.draw.line(screen, C_GOLD_DIM,
+                    (WINDOW_WIDTH//2 - rule_w//2, rule_y),
+                    (WINDOW_WIDTH//2 + rule_w//2, rule_y), 1)
+
+        subtitle = FONTS['ui_xs'].render("SELECT GAME MODE", True, C_TEXT_DIM)
+        screen.blit(subtitle, (WINDOW_WIDTH//2 - subtitle.get_width()//2, rule_y + 10))
+
+        for i, (label, _, desc) in enumerate(MODES):
+            rect    = btn_rects[i]
+            hovered = rect.collidepoint(mx, my)
+
+            bg  = C_BTN_HOVER   if hovered else C_BTN_BG
+            bdr = C_GOLD        if hovered else C_BTN_BORDER
+            bdr_w = 2           if hovered else 1
+            p.draw.rect(screen, bg,  rect, border_radius=10)
+            p.draw.rect(screen, bdr, rect, bdr_w, border_radius=10)
+
+            if hovered:
+                accent = p.Rect(rect.x, rect.y + 12, 3, rect.h - 24)
+                p.draw.rect(screen, C_GOLD, accent, border_radius=2)
+
+            lbl_color = C_GOLD if hovered else C_TEXT_PRIMARY
+            lbl = FONTS['btn'].render(label, True, lbl_color)
+            screen.blit(lbl, (rect.x + rect.w // 2 - lbl.get_width() // 2,
+                               rect.y + 10))
+
+            desc_lbl = FONTS['ui_xs'].render(desc, True, C_TEXT_DIM)
+            screen.blit(desc_lbl, (rect.x + rect.w // 2 - desc_lbl.get_width() // 2,
+                                    rect.y + rect.h - desc_lbl.get_height() - 10))
+
+        foot = FONTS['ui_xs'].render("Press ESC during game to return here", True, C_TEXT_DIM)
+        screen.blit(foot, (WINDOW_WIDTH//2 - foot.get_width()//2, WINDOW_HEIGHT - 28))
+
+        clock.tick(60)
+        p.display.flip()
+
