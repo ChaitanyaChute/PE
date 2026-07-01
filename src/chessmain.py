@@ -126,3 +126,10 @@ def drawBoard(screen):
         y = oy + row * SQ + 3
         screen.blit(lbl, (x, y))
 
+def drawPieces(screen, board):
+    for row in range(DIMENSION):
+        for col in range(DIMENSION):
+            piece = board[row][col]
+            if piece != "--":
+                screen.blit(IMAGES[piece], squareRect(row, col))
+
