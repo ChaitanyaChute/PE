@@ -175,3 +175,18 @@ def drawHighlights(screen, game_state, valid_moves, sq_selected):
 
                         screen.blit(ds, squareRect(er, ec))
 
+def panelX():
+    return COORD_MARGIN + BOARD_SIZE + COORD_MARGIN
+
+def drawDivider(screen, y, px):
+    p.draw.line(screen, C_DIVIDER, (px + 12, y), (px + SIDE_PANEL_WIDTH - 12, y), 1)
+
+def drawCard(screen, rect, radius=6):
+    p.draw.rect(screen, C_PANEL_CARD, rect, border_radius=radius)
+    p.draw.rect(screen, C_PANEL_EDGE, rect, 1, border_radius=radius)
+
+def renderCentered(screen, text, font, color, rect):
+    lbl = font.render(text, True, color)
+    screen.blit(lbl, (rect.x + rect.w // 2 - lbl.get_width() // 2,
+                       rect.y + rect.h // 2 - lbl.get_height() // 2))
+
