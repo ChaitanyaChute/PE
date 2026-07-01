@@ -78,3 +78,16 @@ def loadImages():
             p.image.load("images/" + piece + ".png"), (SQ, SQ))
 
 
+def drawBG(screen):
+    cx = WINDOW_WIDTH // 2
+    for y in range(WINDOW_HEIGHT):
+        t = y / WINDOW_HEIGHT
+        r = int(C_BG[0] + t * (C_BG2[0] - C_BG[0]))
+        g = int(C_BG[1] + t * (C_BG2[1] - C_BG[1]))
+        b = int(C_BG[2] + t * (C_BG2[2] - C_BG[2]))
+        p.draw.line(screen, (r, g, b), (0, y), (WINDOW_WIDTH, y))
+
+
+def boardOrigin():
+    return (COORD_MARGIN, COORD_MARGIN)
+
