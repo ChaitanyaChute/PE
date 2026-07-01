@@ -133,3 +133,45 @@ def drawPieces(screen, board):
             if piece != "--":
                 screen.blit(IMAGES[piece], squareRect(row, col))
 
+def drawHighlights(screen, game_state, valid_moves, sq_selected):
+
+    if game_state.move_log:
+        last = game_state.move_log[-1]
+        for (r, c) in [(last.start_row, last.start_col), (last.end_row, last.end_col)]:
+            s = p.Surface((SQ, SQ), p.SRCALPHA)
+            s.fill(C_LAST_MOVE)
+            screen.blit(s, squareRect(r, c))
+
+    if game_state.inCheck():
+        king_loc = game_state.white_king_location if game_state.white_to_move \
+                   else game_state.black_king_location
+        s = p.Surface((SQ, SQ), p.SRCALPHA)
+        s.fill(C_CHECK_SQ)
+        screen.blit(s, squareRect(*king_loc))
+
+    if sq_selected:
+        r, c = sq_selected
+        if 0 <= r < 8 and 0 <= c < 8:
+            piece = game_state.board[r][c]
+            if piece != '--' and piece[0] == ('w' if game_state.white_to_move else 'b'):
+
+                sel = p.Surface((SQ, SQ), p.SRCALPHA)
+                sel.fill(C_SELECT)
+                screen.blit(sel, squareRect(r, c))
+
+                for mv in valid_moves:
+                    if mv.start_row == r and mv.start_col == c:
+                        er, ec = mv.end_row, mv.end_col
+                        is_dark = (er + ec) % 2 == 1
+                        ds = p.Surface((SQ, SQ), p.SRCALPHA)
+
+                        if game_state.board[er][ec] != '--':
+                            # Capture: gold ring instead of dot
+                            p.draw.circle(ds, C_CAPTURE_RING,
+                                          (SQ//2, SQ//2), SQ//2 - 4, 6)
+                        else:
+                            dot_c = C_DOT_DARK if is_dark else C_DOT_LIGHT
+                            p.draw.circle(ds, dot_c, (SQ//2, SQ//2), SQ // 8)
+
+                        screen.blit(ds, squareRect(er, ec))
+
