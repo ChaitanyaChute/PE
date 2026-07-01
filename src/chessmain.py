@@ -91,3 +91,38 @@ def drawBG(screen):
 def boardOrigin():
     return (COORD_MARGIN, COORD_MARGIN)
 
+def squareRect(row, col):
+    ox, oy = boardOrigin()
+    return p.Rect(ox + col * SQ, oy + row * SQ, SQ, SQ)
+
+def drawBoard(screen):
+    ox, oy = boardOrigin()
+
+    frame = p.Rect(ox - 6, oy - 6, BOARD_SIZE + 12, BOARD_SIZE + 12)
+    p.draw.rect(screen, C_BOARD_BORDER, frame, border_radius=2)
+    gold_frame = p.Rect(ox - 2, oy - 2, BOARD_SIZE + 4, BOARD_SIZE + 4)
+    p.draw.rect(screen, C_GOLD_DIM, gold_frame, 1)
+
+    # Squares
+    for row in range(DIMENSION):
+        for col in range(DIMENSION):
+            color = C_LIGHT_SQ if (row + col) % 2 == 0 else C_DARK_SQ
+            p.draw.rect(screen, color, squareRect(row, col))
+
+    files = "abcdefgh"
+    for col in range(DIMENSION):
+        is_light = (7 + col) % 2 == 0
+        color = C_COORD_DARK if is_light else C_COORD_LIGHT
+        lbl = FONTS['coord'].render(files[col], True, color)
+        x = ox + col * SQ + SQ - lbl.get_width() - 3
+        y = oy + BOARD_SIZE - lbl.get_height() - 2
+        screen.blit(lbl, (x, y))
+
+    for row in range(DIMENSION):
+        is_light = (row + 0) % 2 == 0
+        color = C_COORD_DARK if is_light else C_COORD_LIGHT
+        lbl = FONTS['coord'].render(str(8 - row), True, color)
+        x = ox + 3
+        y = oy + row * SQ + 3
+        screen.blit(lbl, (x, y))
+
