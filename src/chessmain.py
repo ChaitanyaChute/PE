@@ -190,3 +190,133 @@ def renderCentered(screen, text, font, color, rect):
     screen.blit(lbl, (rect.x + rect.w // 2 - lbl.get_width() // 2,
                        rect.y + rect.h // 2 - lbl.get_height() // 2))
 
+def drawSidePanel(screen, game_state, mode_label):
+    px = panelX()
+    p.draw.rect(screen, C_PANEL_BG, p.Rect(px, 0, SIDE_PANEL_WIDTH, WINDOW_HEIGHT))
+    p.draw.line(screen, C_GOLD_DIM, (px, 0), (px, WINDOW_HEIGHT), 1)
+
+    y = 18
+
+    title = FONTS['title_s'].render("CHESS", True, C_GOLD)
+    screen.blit(title, (px + SIDE_PANEL_WIDTH // 2 - title.get_width() // 2, y))
+    y += title.get_height() + 4
+
+    mode_lbl = FONTS['ui_xs'].render(mode_label.upper(), True, C_TEXT_DIM)
+    screen.blit(mode_lbl, (px + SIDE_PANEL_WIDTH // 2 - mode_lbl.get_width() // 2, y))
+    y += mode_lbl.get_height() + 14
+
+    drawDivider(screen, y, px)
+    y += 12
+
+    if game_state.checkmate:
+        winner = "Black" if game_state.white_to_move else "White"
+        status, s_color = f"{winner} wins  ·  Checkmate", C_TEXT_WIN
+    elif game_state.stalemate:
+        status, s_color = "Draw  ·  Stalemate", C_TEXT_DRAW
+    elif game_state.inCheck():
+        who = "White" if game_state.white_to_move else "Black"
+        status, s_color = f"{who} is in Check!", C_TEXT_CHECK
+    else:
+        who = "White" if game_state.white_to_move else "Black"
+        status, s_color = f"{who} to move", C_TEXT_PRIMARY
+
+    card = p.Rect(px + 10, y, SIDE_PANEL_WIDTH - 20, 34)
+    drawCard(screen, card, radius=8)
+
+    pip_x = card.x + 10
+    pip_y = card.y + card.h // 2
+    pip_col = (240,235,220) if (game_state.white_to_move) else (30,28,40)
+    p.draw.circle(screen, pip_col,        (pip_x, pip_y), 6)
+    p.draw.circle(screen, C_GOLD_DIM,     (pip_x, pip_y), 6, 1)
+
+    lbl = FONTS['ui'].render(status, True, s_color)
+    screen.blit(lbl, (card.x + 24, card.y + card.h // 2 - lbl.get_height() // 2))
+    y += card.h + 14
+
+    drawDivider(screen, y, px)
+    y += 12
+
+    cap_hdr = FONTS['ui_xs'].render("CAPTURED PIECES", True, C_TEXT_DIM)
+    screen.blit(cap_hdr, (px + 12, y))
+    y += cap_hdr.get_height() + 6
+
+    white_cap, black_cap = getCaptured(game_state)
+    cap_card = p.Rect(px + 10, y, SIDE_PANEL_WIDTH - 20, 68)
+    drawCard(screen, cap_card)
+
+    SZ = 26
+   
+    for row_idx, (side_label, caps) in enumerate([("▲", white_cap), ("▽", black_cap)]):
+        ry = y + 6 + row_idx * (SZ + 4)
+   
+        if row_idx == 1 and caps:
+            tile_w = min(len(caps), 9) * (SZ + 1) + 18
+            tile = p.Rect(cap_card.x + 4, ry - 2, tile_w, SZ + 4)
+            p.draw.rect(screen, C_PANEL_CARD_LT, tile, border_radius=4)
+        slbl = FONTS['ui_xs'].render(side_label, True, C_TEXT_DIM)
+        screen.blit(slbl, (cap_card.x + 6, ry + SZ // 2 - slbl.get_height() // 2))
+        cx = cap_card.x + 20
+        for piece in caps[:9]:
+            mini = p.transform.smoothscale(IMAGES[piece], (SZ, SZ))
+            screen.blit(mini, (cx, ry))
+            cx += SZ + 1
+    y += cap_card.h + 14
+
+    drawDivider(screen, y, px)
+    y += 12
+
+    log_hdr = FONTS['ui_xs'].render("MOVE LOG", True, C_TEXT_DIM)
+    screen.blit(log_hdr, (px + 12, y))
+    y += log_hdr.get_height() + 4
+
+    log_area_h = WINDOW_HEIGHT - y - 42
+    log_surf   = p.Surface((SIDE_PANEL_WIDTH - 20, log_area_h), p.SRCALPHA)
+
+    moves      = game_state.move_log
+    ROW_H      = 22
+    max_rows   = log_area_h // ROW_H
+    total_rows = (len(moves) + 1) // 2
+    start      = max(0, total_rows - max_rows)
+
+    for i in range(start, total_rows):
+        wi = i * 2
+        bi = wi + 1
+        ry = (i - start) * ROW_H
+        is_last = (i == total_rows - 1)
+        bg = C_LOG_ACTIVE if is_last else (C_LOG_A if i % 2 == 0 else C_LOG_B)
+        p.draw.rect(log_surf, bg, p.Rect(0, ry, SIDE_PANEL_WIDTH - 20, ROW_H))
+
+        num = FONTS['mono'].render(f"{i+1:>3}.", True, C_TEXT_DIM)
+        log_surf.blit(num, (4, ry + ROW_H // 2 - num.get_height() // 2))
+
+        if wi < len(moves):
+            font = FONTS['mono_b'] if is_last and game_state.white_to_move == False else FONTS['mono']
+            wl = font.render(moves[wi].getChessNotation(), True,
+                             C_TEXT_GOLD if is_last and bi > len(moves) else C_TEXT_PRIMARY)
+            log_surf.blit(wl, (40, ry + ROW_H // 2 - wl.get_height() // 2))
+
+        if bi < len(moves):
+            font = FONTS['mono_b'] if is_last else FONTS['mono']
+            bl = font.render(moves[bi].getChessNotation(), True,
+                             C_TEXT_GOLD if is_last else C_TEXT_PRIMARY)
+            log_surf.blit(bl, (130, ry + ROW_H // 2 - bl.get_height() // 2))
+
+    screen.blit(log_surf, (px + 10, y))
+
+    hints_y = WINDOW_HEIGHT - 28
+    hints = [("Z", "Undo"), ("R", "Restart"), ("ESC", "Menu")]
+    total_w = 0
+    rendered = []
+    for k, v in hints:
+        k_s = FONTS['ui_xs'].render(k, True, C_GOLD_DIM)
+        v_s = FONTS['ui_xs'].render(f" {v}", True, C_TEXT_DIM)
+        rendered.append((k_s, v_s))
+        total_w += k_s.get_width() + v_s.get_width() + 18
+    hx = px + SIDE_PANEL_WIDTH // 2 - total_w // 2
+    for k_s, v_s in rendered:
+        screen.blit(k_s, (hx, hints_y))
+        hx += k_s.get_width()
+        screen.blit(v_s, (hx, hints_y))
+        hx += v_s.get_width() + 18
+
+
