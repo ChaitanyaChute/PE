@@ -331,3 +331,37 @@ def getCaptured(game_state):
     return white_cap, black_cap
 
 
+def animateMove(move, screen, board, clock, mode_label):
+    d_row  = move.end_row  - move.start_row
+    d_col  = move.end_col  - move.start_col
+    frames = (abs(d_row) + abs(d_col)) * 7
+
+    for frame in range(frames + 1):
+        t   = frame / max(frames, 1)
+        # ease-out cubic
+        t   = 1 - (1 - t) ** 3
+        row = move.start_row + d_row * t
+        col = move.start_col + d_col * t
+
+        drawBG(screen)
+        drawBoard(screen)
+        drawPieces(screen, board)
+
+        color = C_LIGHT_SQ if (move.end_row + move.end_col) % 2 == 0 else C_DARK_SQ
+        p.draw.rect(screen, color, squareRect(move.end_row, move.end_col))
+
+        if move.piece_captured != '--':
+            if move.is_enpassant_move:
+                ep_row = move.end_row + 1 if move.piece_captured[0] == 'b' else move.end_row - 1
+                screen.blit(IMAGES[move.piece_captured], squareRect(ep_row, move.end_col))
+            else:
+                screen.blit(IMAGES[move.piece_captured], squareRect(move.end_row, move.end_col))
+
+        ox, oy = boardOrigin()
+        screen.blit(IMAGES[move.piece_moved],
+                    p.Rect(int(ox + col * SQ), int(oy + row * SQ), SQ, SQ))
+
+        p.display.flip()
+        clock.tick(60)
+
+
