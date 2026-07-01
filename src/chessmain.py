@@ -320,3 +320,14 @@ def drawSidePanel(screen, game_state, mode_label):
         hx += v_s.get_width() + 18
 
 
+def getCaptured(game_state):
+    white_cap, black_cap = [], []
+    for mv in game_state.move_log:
+        if mv.piece_captured != '--':
+            if mv.piece_captured[0] == 'b':
+                white_cap.append(mv.piece_captured)
+            else:
+                black_cap.append(mv.piece_captured)
+    return white_cap, black_cap
+
+
